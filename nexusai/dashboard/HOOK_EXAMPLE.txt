@@ -1,0 +1,75 @@
+﻿========================================
+NexusAI Dashboard - Integration Example
+========================================
+
+How to add monitoring hooks to your existing MetaClaw agents:
+
+1. Import the logger in your agent files:
+
+----------------------------------------------------------------
+from nexusai.dashboard.routes import logger
+import uuid
+
+class YourMetaClawAgent:
+    def __init__(self, name):
+        self.name = name
+        # Log agent start
+        logger.log_agent_start(name)
+    
+    def execute_task(self, task_name):
+        # Generate a unique task ID
+        task_id = str(uuid.uuid4())
+        
+        # Log task start
+        logger.log_task_start(self.name, task_id, task_name)
+        
+        try:
+            # Your existing task logic here
+            result = self._do_work()
+            
+            # Log successful completion
+            logger.log_task_complete(self.name, task_id, success=True)
+            return result
+            
+        except Exception as e:
+            # Log failed completion
+            logger.log_task_complete(self.name, task_id, success=False, error=str(e))
+            raise
+    
+    def shutdown(self):
+        # Log agent stop
+        logger.log_agent_stop(self.name)
+----------------------------------------------------------------
+
+2. Alternative: Use the HTTP hooks if you can't import directly:
+
+----------------------------------------------------------------
+import requests
+
+# When agent starts
+requests.post("http://localhost:8080/api/hooks/agent/start", 
+              params={"agent_name": "AgentName"})
+
+# When task starts
+requests.post("http://localhost:8080/api/hooks/task/start",
+              params={
+                  "agent_name": "AgentName",
+                  "task_id": "unique-task-id",
+                  "task_name": "Task Description"
+              })
+
+# When task completes
+requests.post("http://localhost:8080/api/hooks/task/complete",
+              params={
+                  "agent_name": "AgentName",
+                  "task_id": "unique-task-id",
+                  "success": True,
+                  "error": ""  # Include error message if failed
+              })
+
+# When agent stops
+requests.post("http://localhost:8080/api/hooks/agent/stop",
+              params={"agent_name": "AgentName"})
+----------------------------------------------------------------
+
+That's it! The dashboard will automatically start tracking your agents.

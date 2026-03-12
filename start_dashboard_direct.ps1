@@ -1,0 +1,28 @@
+﻿# Direct NexusAI Dashboard Launcher
+Write-Host "================================" -ForegroundColor Cyan
+Write-Host "   NexusAI Dashboard Direct Launcher" -ForegroundColor Cyan
+Write-Host "================================" -ForegroundColor Cyan
+Write-Host ""
+
+# Check if Python is installed
+try {
+    python --version 2>&1 | Out-Null
+    Write-Host "✓ Python found" -ForegroundColor Green
+} catch {
+    Write-Host "✗ Python is not installed or not in PATH" -ForegroundColor Red
+    exit 1
+}
+
+# Install requirements if needed
+Write-Host ""
+Write-Host "Checking requirements..." -ForegroundColor Yellow
+pip install fastapi uvicorn
+
+Write-Host ""
+Write-Host "Starting NexusAI Dashboard..." -ForegroundColor Green
+Write-Host "Dashboard will be available at: http://localhost:8080" -ForegroundColor Yellow
+Write-Host "Press Ctrl+C to stop" -ForegroundColor Yellow
+Write-Host ""
+
+# Run the dashboard directly (not as a module)
+python nexusai/dashboard/dashboard_server.py

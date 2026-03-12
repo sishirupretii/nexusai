@@ -1,0 +1,362 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI Agent Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+        }
+        
+        h1 span {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-title {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .stat-value {
+            color: #333;
+            font-size: 36px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .stat-value.success { color: #4CAF50; }
+        .stat-value.failure { color: #f44336; }
+        .stat-value.active { color: #2196F3; }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f5f5f5;
+            color: #666;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active { background: #e3f2fd; color: #1976d2; }
+        .status-inactive { background: #ffebee; color: #c62828; }
+        .status-success { background: #e8f5e8; color: #2e7d32; }
+        .status-failure { background: #ffebee; color: #c62828; }
+        .status-running { background: #fff3e0; color: #ef6c00; }
+        
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .log-time {
+            color: #999;
+            font-size: 12px;
+            min-width: 80px;
+        }
+        
+        .log-message {
+            flex: 1;
+        }
+        
+        .log-icon {
+            width: 24px;
+            text-align: center;
+        }
+        
+        .log-icon.success { color: #4CAF50; }
+        .log-icon.failure { color: #f44336; }
+        .log-icon.running { color: #FF9800; }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .last-updated {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 <span>NexusAI</span> Agent Dashboard</h1>
+            <div>
+                <span class="last-updated" id="lastUpdated"></span>
+                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+            </div>
+        </header>
+        
+        <div class="stats-grid" id="stats">
+            <div class="stat-card">
+                <div class="stat-title">Active Agents</div>
+                <div class="stat-value active" id="activeAgents">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Running Tasks</div>
+                <div class="stat-value" id="runningTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Tasks Completed</div>
+                <div class="stat-value success" id="completedTasks">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Failed Tasks</div>
+                <div class="stat-value failure" id="failedTasks">0</div>
+            </div>
+        </div>
+        
+        <div class="dashboard-grid">
+            <div class="card">
+                <h2>Active Agents</h2>
+                <table id="agentsTable">
+                    <thead>
+                        <tr>
+                            <th>Agent Name</th>
+                            <th>Status</th>
+                            <th>Tasks Completed</th>
+                            <th>Success Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agentsBody">
+                        <tr><td colspan="4" style="text-align: center;">Loading agents...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="card">
+                <h2>Recent Tasks</h2>
+                <table id="tasksTable">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Agent</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksBody">
+                        <tr><td colspan="3" style="text-align: center;">Loading tasks...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Activity Logs</h2>
+            <div id="logsContainer">
+                <div style="text-align: center; padding: 20px;">Loading logs...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let autoRefresh = true;
+        let refreshInterval;
+        
+        async function fetchData() {
+            try {
+                const [agents, tasks, logs] = await Promise.all([
+                    fetch('/api/agents').then(r => r.json()),
+                    fetch('/api/tasks').then(r => r.json()),
+                    fetch('/api/logs').then(r => r.json())
+                ]);
+                
+                updateDashboard(agents, tasks, logs);
+                updateLastUpdated();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        
+        function updateDashboard(agents, tasks, logs) {
+            // Update stats
+            const activeAgents = agents.filter(a => a.status === 'active').length;
+            const runningTasks = tasks.filter(t => t.status === 'running').length;
+            const completedTasks = tasks.filter(t => t.status === 'completed' && t.success === true).length;
+            const failedTasks = tasks.filter(t => t.status === 'completed' && t.success === false).length;
+            
+            document.getElementById('activeAgents').textContent = activeAgents;
+            document.getElementById('runningTasks').textContent = runningTasks;
+            document.getElementById('completedTasks').textContent = completedTasks;
+            document.getElementById('failedTasks').textContent = failedTasks;
+            
+            // Update agents table
+            const agentsBody = document.getElementById('agentsBody');
+            if (agents.length === 0) {
+                agentsBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No agents found</td></tr>';
+            } else {
+                agentsBody.innerHTML = agents.map(agent => 
+                    <tr>
+                        <td></td>
+                        <td><span class="status-badge status-"></span></td>
+                        <td></td>
+                        <td>%</td>
+                    </tr>
+                ).join('');
+            }
+            
+            // Update tasks table
+            const tasksBody = document.getElementById('tasksBody');
+            if (tasks.length === 0) {
+                tasksBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No tasks found</td></tr>';
+            } else {
+                tasksBody.innerHTML = tasks.slice(0, 10).map(task => 
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td><span class="status-badge status-"></span></td>
+                    </tr>
+                ).join('');
+            }
+            
+            // Update logs
+            const logsContainer = document.getElementById('logsContainer');
+            if (logs.length === 0) {
+                logsContainer.innerHTML = '<div style="text-align: center; padding: 20px;">No logs found</div>';
+            } else {
+                logsContainer.innerHTML = logs.slice(0, 20).map(log => 
+                    <div class="log-entry">
+                        <span class="log-time"></span>
+                        <span class="log-icon "></span>
+                        <span class="log-message"></span>
+                    </div>
+                ).join('');
+            }
+        }
+        
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = Last updated: ;
+        }
+        
+        function refreshData() {
+            fetchData();
+            // Reset auto-refresh
+            if (autoRefresh) {
+                clearInterval(refreshInterval);
+                refreshInterval = setInterval(fetchData, 5000);
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            refreshInterval = setInterval(fetchData, 5000);
+        });
+    </script>
+</body>
+</html>
